@@ -1,5 +1,6 @@
-package icesi.ugoogle;
+package icesi.ugoogle.jobs;
 
+import icesi.ugoogle.pagerank.NodoWritable;
 import icesi.ugoogle.pagerank.WikipediaPageRankReducer;
 import icesi.ugoogle.pagerank.WikipediaParsingPageRankMapper;
 
@@ -15,7 +16,7 @@ import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.mapreduce.lib.output.SequenceFileOutputFormat;
 import org.apache.hadoop.util.Tool;
 
-public class WikipediaParsingPageRank extends Configured implements Tool {
+public class ParsingWikipediaPageRank extends Configured implements Tool {
 
 	@Override
 	public int run(String[] arg0) throws Exception {
@@ -23,13 +24,18 @@ public class WikipediaParsingPageRank extends Configured implements Tool {
 		Job parsingJob = new Job(getConf());
 		parsingJob.setJobName("parsingjob");
 
-		parsingJob.setJarByClass(WikipediaParsingPageRank.class);
+		parsingJob.setJarByClass(ParsingWikipediaPageRank.class);
 		parsingJob.setMapperClass(WikipediaParsingPageRankMapper.class);
 		parsingJob.setReducerClass(WikipediaPageRankReducer.class);
-		parsingJob.setCombinerClass(WikipediaPageRankReducer.class);
 
+		// Set the outputs for the Map
+		parsingJob.setMapOutputKeyClass(Text.class);
+		parsingJob.setMapOutputValueClass(ObjectWritable.class);
+
+		// Set the outputs for the Job
 		parsingJob.setOutputKeyClass(Text.class);
-		parsingJob.setOutputValueClass(ObjectWritable.class);
+		parsingJob.setOutputValueClass(NodoWritable.class);
+
 		parsingJob.setInputFormatClass(TextInputFormat.class);
 		parsingJob.setOutputFormatClass(SequenceFileOutputFormat.class);
 
@@ -39,7 +45,6 @@ public class WikipediaParsingPageRank extends Configured implements Tool {
 		FileOutputFormat.setOutputPath(parsingJob, new Path(arg0[1]));
 
 		boolean success = parsingJob.waitForCompletion(true);
-		System.out.println("Finished Parsing job. Success " + success);
 
 		return success ? 0 : 1;
 	}

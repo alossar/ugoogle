@@ -1,5 +1,6 @@
-package icesi.ugoogle;
+package icesi.ugoogle.jobs;
 
+import icesi.ugoogle.pagerank.NodoWritable;
 import icesi.ugoogle.pagerank.WikipediaPageRankMapper;
 import icesi.ugoogle.pagerank.WikipediaPageRankReducer;
 
@@ -15,22 +16,27 @@ import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.mapreduce.lib.output.SequenceFileOutputFormat;
 import org.apache.hadoop.util.Tool;
 
-public class WikipediaIterationPageRank extends Configured implements Tool {
+public class IterationWikipediaPageRank extends Configured implements Tool {
 
 	@Override
 	public int run(String[] arg0) throws Exception {
 
 		System.out.println("Beginning iteration job... ");
 		Job pageRankJob = new Job(getConf());
-		pageRankJob.setJarByClass(WikipediaIterationPageRank.class);
+		pageRankJob.setJarByClass(IterationWikipediaPageRank.class);
 		pageRankJob.setJobName("pagerank");
 
+		// Set the outputs for the Map
+		pageRankJob.setMapOutputKeyClass(Text.class);
+		pageRankJob.setMapOutputValueClass(ObjectWritable.class);
+
+		// Set the outputs for the Job
 		pageRankJob.setOutputKeyClass(Text.class);
-		pageRankJob.setOutputValueClass(ObjectWritable.class);
+		pageRankJob.setOutputValueClass(NodoWritable.class);
 
 		pageRankJob.setMapperClass(WikipediaPageRankMapper.class);
 		pageRankJob.setReducerClass(WikipediaPageRankReducer.class);
-		pageRankJob.setCombinerClass(WikipediaPageRankReducer.class);
+		// pageRankJob.setCombinerClass(WikipediaPageRankReducer.class);
 
 		pageRankJob.setInputFormatClass(SequenceFileInputFormat.class);
 		pageRankJob.setOutputFormatClass(SequenceFileOutputFormat.class);
@@ -46,8 +52,8 @@ public class WikipediaIterationPageRank extends Configured implements Tool {
 		if (success) {
 			fs.delete(new Path(arg0[1]), true);
 			fs.rename(new Path(arg0[2]), new Path(arg0[1]));
-		} 
-		
+		}
+
 		return success ? 0 : 1;
 	}
 
